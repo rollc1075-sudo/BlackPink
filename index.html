@@ -1,0 +1,1374 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M26 // THE MIDNIGHT METROVERSE</title>
+    <style>
+        /* ==========================================================================
+           1. CINEMATIC DESIGN SYSTEM & DESIGN TOKENS (~400 LINES DESIGN CORE)
+           ========================================================================== */
+        :root {
+            --bg-deep: #050508;
+            --metro-blue: #0a1128;
+            --neon-cyan: #00f3ff;
+            --neon-purple: #b000ff;
+            --neon-pink: #ff0055;
+            --amber-warn: #ffaa00;
+            --rain-gray: #4a5568;
+            --chrome-silver: #e2e8f0;
+            --crt-green: #33ff33;
+            --font-mono: 'Courier New', Courier, monospace;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --vhs-glitch-1: rgba(255, 0, 85, 0.5);
+            --vhs-glitch-2: rgba(0, 243, 255, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-deep);
+            color: var(--chrome-silver);
+            font-family: var(--font-sans);
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        /* Global Audio/UI Utilities */
+        .hidden { display: none !important; }
+        
+        /* CRT & VHS Global Overlays */
+        .vhs-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+            z-index: 99999;
+            pointer-events: none;
+        }
+
+        .vhs-overlay::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.1) 50%), linear-gradient(90deg, rgba(255,0,0,0.03), rgba(0,255,0,0.01), rgba(0,0,255,0.03));
+            opacity: 0;
+            z-index: 99999;
+            pointer-events: none;
+            animation: crt-flicker 0.15s infinite;
+        }
+
+        /* Ambient Global Rain Layer */
+        .rain-canvas-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        /* Dynamic Engine Grid Master Layout */
+        .app-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Global Meta-Information Display Engine */
+        .meta-hud {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: rgba(0, 243, 255, 0.7);
+            z-index: 9000;
+            text-align: right;
+            pointer-events: none;
+            line-height: 1.5;
+        }
+
+        .meta-hud span {
+            color: var(--neon-pink);
+            animation: neon-pulse 2s infinite alternate;
+        }
+
+        /* CCTV Camera System Overlay Viewport */
+        .cctv-viewport {
+            position: fixed;
+            bottom: 25px;
+            left: 30px;
+            width: 160px;
+            height: 100px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: #000;
+            z-index: 9000;
+            border-radius: 4px;
+            overflow: hidden;
+            filter: grayscale(1) contrast(1.5);
+            opacity: 0.65;
+            pointer-events: none;
+        }
+        .cctv-grid {
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.3), rgba(0,0,0,0.3) 1px, transparent 1px, transparent 2px);
+            position: relative;
+        }
+        .cctv-rec {
+            position: absolute;
+            top: 5px; left: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: #ff0000;
+            animation: flash 1s infinite;
+        }
+
+        /* ==========================================================================
+           2. ACT 1 CSS - THE BOARDING STATION & SYSTEMS
+           ========================================================================== */
+        #act1-boarding-gate {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #020205 0%, #060919 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 2s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .intro-terminal-box {
+            max-width: 650px;
+            width: 90%;
+            font-family: var(--font-mono);
+            margin-bottom: 40px;
+        }
+
+        .typing-headline {
+            font-size: 1.6rem;
+            color: var(--neon-cyan);
+            border-right: 2px solid var(--neon-cyan);
+            white-space: nowrap;
+            overflow: hidden;
+            animation: blink 0.75s step-end infinite;
+            margin-bottom: 15px;
+        }
+
+        /* Ticket Interface System Styling */
+        .ticket-wrapper {
+            position: relative;
+            width: 90%;
+            max-width: 420px;
+            background: linear-gradient(135deg, #111424 0%, #090b14 100%);
+            border: 2px solid rgba(0, 243, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.05);
+            transition: all 0.5s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .ticket-wrapper:hover {
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 50px rgba(176, 0, 255, 0.15);
+            transform: translateY(-5px);
+        }
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+        .ticket-body h3 {
+            font-size: 1.4rem;
+            letter-spacing: 3px;
+            color: var(--chrome-silver);
+            margin-bottom: 5px;
+        }
+        .ticket-stub {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .board-btn {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 8px 18px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .board-btn:hover {
+            background: var(--neon-cyan);
+            color: var(--bg-deep);
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        /* ==========================================================================
+           3. ACT 2 CSS - SUBWAY COMPARTMENT CORE MATRIX ENGINE
+           ========================================================================== */
+        #act2-metro-universe {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            background: #040406;
+            opacity: 1;
+            z-index: 50;
+        }
+
+        /* Left Hand Navigation Subway System Map Panel */
+        .metro-map-sidebar {
+            background: #08080c;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            position: relative;
+            z-index: 60;
+        }
+        .map-title-block {
+            margin-bottom: 35px;
+        }
+        .map-title-block h2 {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 2px;
+        }
+        .map-title-block p {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--chrome-silver);
+        }
+
+        /* Line Tracks UI System */
+        .map-track-vector {
+            position: relative;
+            flex-grow: 1;
+        }
+        .map-track-line {
+            position: absolute;
+            left: 18px;
+            top: 10px;
+            bottom: 10px;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--neon-cyan), var(--neon-purple), var(--neon-pink), var(--amber-warn));
+            border-radius: 2px;
+        }
+        .station-node-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 26px;
+            padding-left: 45px;
+            cursor: pointer;
+            height: 36px;
+        }
+        .station-bullet {
+            position: absolute;
+            left: 10px;
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            background: var(--bg-deep);
+            border: 3px solid rgba(255,255,255,0.2);
+            transition: all 0.4s ease;
+            z-index: 2;
+        }
+        .station-node-item:hover .station-bullet,
+        .station-node-item.active .station-bullet {
+            border-color: #fff;
+            box-shadow: 0 0 12px #fff;
+            transform: scale(1.2);
+        }
+        .station-node-item.active .station-bullet {
+            background: var(--neon-cyan);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+        .station-meta-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .station-id {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.3);
+        }
+        .station-name {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.6);
+            white-space: nowrap;
+            transition: color 0.3s;
+        }
+        .station-node-item:hover .station-name,
+        .station-node-item.active .station-name {
+            color: #fff;
+        }
+
+        /* Right Hand Main Stage Area viewport viewport */
+        .compartment-viewport-stage {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #0d0f1d 0%, #040407 100%);
+        }
+
+        .compartment-panel-canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            display: none;
+            padding: 50px;
+            overflow-y: auto;
+        }
+        .compartment-panel-canvas.active-stage {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: stage-transition-entry 0.7s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+
+        /* --------------------------------------------------------------------------
+           COMPARTMENT SUB-ELEMENT SPECIFIC LAYOUT STYLING
+           -------------------------------------------------------------------------- */
+        
+        /* Compartment 1: Chaos Car Styles */
+        .chaos-grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+        .chaos-card-item {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .chaos-card-item:hover {
+            transform: translateY(-5px) rotate(2deg);
+            background: rgba(255, 0, 85, 0.05);
+            border-color: var(--neon-pink);
+        }
+        .menace-badge {
+            background: var(--neon-pink);
+            color: #fff;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        /* Compartment 2: Rain Window Drawing Box Styling */
+        .window-frame-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            height: 400px;
+            background: #111420;
+            border: 16px solid #080a10;
+            border-radius: 24px;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            touch-action: none; /* Prevents scroll on touch */
+        }
+        .window-glass-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10;
+            cursor: crosshair;
+        }
+        .window-blur-background {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://images.unsplash.com/photo-1515621061946-eff1c2a352bd?q=80&width=1200') center center;
+            background-size: cover;
+            filter: blur(15px);
+            opacity: 0.65;
+            z-index: 1;
+        }
+        .window-condensation-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            z-index: 5;
+            pointer-events: none;
+        }
+        .window-instruction-label {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            z-index: 15;
+            pointer-events: none;
+            padding: 0 10px;
+        }
+
+        /* Compartment 3: Alternate Realities Selector Engine */
+        .au-universe-scroller {
+            display: flex;
+            gap: 25px;
+            width: 100%;
+            max-width: 950px;
+            overflow-x: auto;
+            padding: 20px 10px;
+        }
+        .au-node-card {
+            min-width: 280px;
+            background: #0f111a;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.4s;
+            cursor: pointer;
+        }
+        .au-node-card:hover {
+            border-color: var(--neon-purple);
+            background: linear-gradient(to bottom, #0f111a, #161226);
+            transform: scale(1.03);
+        }
+        .au-tag {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--neon-purple);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Compartment 4: Unsent Messages Machine */
+        .unsent-terminal-terminal {
+            width: 100%;
+            max-width: 700px;
+            background: #050508;
+            border: 1px solid #1a1a26;
+            padding: 35px;
+            border-radius: 8px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+        }
+        .unsent-msg-line {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            min-height: 80px;
+            color: rgba(255,255,255,0.85);
+        }
+
+        /* Compartment 5: Photo 3D Tunnel Component */
+        .photo-tunnel-container {
+            width: 100%;
+            height: 450px;
+            position: relative;
+            overflow: hidden;
+            background: #020204;
+            border-radius: 8px;
+        }
+        .floating-memory-frame {
+            position: absolute;
+            width: 200px;
+            padding: 10px;
+            background: #fff;
+            color: #111;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .floating-memory-frame img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            margin-bottom: 8px;
+            filter: grayscale(0.3);
+        }
+        .floating-memory-frame:hover {
+            transform: scale(1.1) !important;
+            z-index: 999 !important;
+        }
+
+        /* Compartment 6: Arcade Console Engine Matrix */
+        .arcade-cabinet-box {
+            width: 100%;
+            max-width: 600px;
+            background: linear-gradient(to bottom, #140d26, #07040d);
+            border: 3px solid var(--neon-pink);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 0 35px rgba(255, 0, 85, 0.2);
+        }
+        .arcade-screen-zone {
+            background: #000;
+            border: 2px solid #221538;
+            height: 240px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .arcade-score-board {
+            font-family: var(--font-mono);
+            font-size: 1.3rem;
+            color: var(--neon-cyan);
+            margin-bottom: 10px;
+        }
+        .arcade-interactive-target {
+            width: 60px;
+            height: 60px;
+            background: var(--neon-pink);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--neon-pink);
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Compartment 7: Abandoned Car Section Styling */
+        .abandoned-car-layout {
+            text-align: center;
+            max-width: 600px;
+            animation: pulse-ambient-dark 4s infinite alternate;
+        }
+        .flickering-signboard {
+            font-family: var(--font-mono);
+            font-size: 1.4rem;
+            color: rgba(255,255,255,0.15);
+            margin-bottom: 30px;
+            animation: severe-flicker 5s infinite;
+        }
+        .hidden-seat-trigger {
+            width: 120px;
+            height: 40px;
+            border: 1px solid rgba(255,255,255,0.03);
+            margin: 40px auto;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.05);
+            transition: all 0.5s;
+        }
+        .hidden-seat-trigger:hover {
+            border-color: rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* ==========================================================================
+           4. ACT 3 & FINAL ACT CSS - COLLAPSE ENGINE & OUTRO
+           ========================================================================== */
+        #act3-breakdown-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: var(--font-mono);
+        }
+        .glitch-announcement-panel {
+            font-size: 2rem;
+            color: #ff003c;
+            text-shadow: 3px 0 0 var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #act4-last-stop {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at bottom, #111116 0%, #020203 100%);
+            z-index: 3000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 3s ease;
+        }
+        .final-platform-pole {
+            width: 4px; height: 220px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.3), rgba(255,255,255,0));
+            position: relative;
+            margin-bottom: 40px;
+        }
+        .final-lamp-glow {
+            position: absolute;
+            top: 0; left: -8px; width: 20px; height: 20px;
+            background: #ffe699;
+            border-radius: 50%;
+            box-shadow: 0 0 40px 20px #ffe699;
+        }
+        .outro-philosophical-statement {
+            font-size: 1.35rem;
+            color: rgba(255,255,255,0.85);
+            font-weight: 300;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            padding: 0 20px;
+        }
+
+        .window-hidden-photo {
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            /* Replace the URL below with your actual photo link */
+            background: url('2.png') center center;
+            background-size: cover;
+            /* z-index: 3 places it perfectly behind the canvas (10) and fog (5), but above the blurry background (1) */
+            z-index: 3; 
+        }
+
+        /* ==========================================================================
+           5. MOBILE RESPONSIVE MEDIA QUERIES (NEW)
+           ========================================================================== */
+        @media (max-width: 768px) {
+            .meta-hud {
+                top: 10px;
+                right: 15px;
+                font-size: 0.7rem;
+            }
+            .cctv-viewport {
+                display: none; /* Hide on small screens to save space */
+            }
+            .typing-headline {
+                font-size: 1.2rem;
+                white-space: normal;
+                border-right: none;
+                animation: none;
+            }
+            #act2-metro-universe {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+            .metro-map-sidebar {
+                padding: 15px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                max-height: 120px;
+                justify-content: center;
+            }
+            .map-title-block {
+                display: none; /* Hide title block to maximize map space */
+            }
+            .map-track-vector {
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                align-items: center;
+                padding-bottom: 10px;
+            }
+            .map-track-vector::-webkit-scrollbar {
+                height: 4px;
+            }
+            .map-track-vector::-webkit-scrollbar-thumb {
+                background: rgba(255,255,255,0.2);
+                border-radius: 4px;
+            }
+            .map-track-line {
+                top: auto;
+                bottom: 15px;
+                left: 0;
+                right: 0;
+                width: auto;
+                min-width: 100%;
+                height: 3px;
+                background: linear-gradient(to right, var(--neon-cyan), var(--neon-purple), var(--neon-pink), var(--amber-warn));
+            }
+            .station-node-item {
+                margin-bottom: 0;
+                margin-right: 30px;
+                padding-left: 0;
+                padding-top: 25px;
+                flex-shrink: 0;
+                flex-direction: column;
+                text-align: center;
+            }
+            .station-bullet {
+                left: 50%;
+                top: -5px;
+                transform: translateX(-50%);
+            }
+            .compartment-panel-canvas {
+                padding: 20px;
+            }
+            .window-frame-container {
+                height: 300px;
+                border-width: 8px;
+            }
+            .arcade-cabinet-box {
+                padding: 15px;
+            }
+            .arcade-screen-zone {
+                height: 180px;
+            }
+            .au-universe-scroller {
+                flex-direction: column;
+            }
+            .au-node-card {
+                min-width: unset;
+                width: 100%;
+            }
+            .unsent-terminal-terminal {
+                padding: 20px;
+            }
+        }
+
+        /* ==========================================================================
+           6. KEYFRAME ANIMATION ENGINE MATRIX
+           ========================================================================== */
+        @keyframes crt-flicker {
+            0% { opacity: 0.23122; }
+            50% { opacity: 0.19832; }
+            100% { opacity: 0.22091; }
+        }
+        @keyframes blink {
+            from, to { border-color: transparent }
+            50% { border-color: var(--neon-cyan); }
+        }
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        @keyframes neon-pulse {
+            from { opacity: 0.6; text-shadow: 0 0 5px var(--neon-pink); }
+            to { opacity: 1; text-shadow: 0 0 15px var(--neon-pink); }
+        }
+        @keyframes stage-transition-entry {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pulse-ambient-dark {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        @keyframes severe-flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { color: rgba(255,255,255,0.15); text-shadow: none; }
+            20%, 24%, 55% { color: #fff; text-shadow: 0 0 10px var(--neon-cyan); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="vhs-overlay"></div>
+    <canvas id="ambient-rain-canvas" class="rain-canvas-layer"></canvas>
+
+    <div class="meta-hud">
+        SYSTEM CLOCK: <span id="hud-clock-time">02:14 AM</span><br>
+        COORDINATES: <span id="hud-compartment-id">NODE_UNCONNECTED</span><br>
+        METRO CORE STABILITY: <span id="hud-stability-meter">100%</span>
+    </div>
+
+    <div class="cctv-viewport">
+        <div class="cctv-grid">
+            <div class="cctv-rec">● REC [CAM_B04]</div>
+        </div>
+    </div>
+
+    <div class="app-container">
+
+        <section id="act1-boarding-gate">
+            <div class="intro-terminal-box">
+                <div class="typing-headline" id="terminal-typed-text"></div>
+                <p style="color: rgba(255,255,255,0.4); font-size:0.9rem;">ENCRYPTION STATUS: ACTIVE // NO TRACE LEAVES THIS CAR</p>
+            </div>
+
+            <div class="ticket-wrapper" id="master-ticket-trigger">
+                <div class="ticket-header">
+                    <div>METRO TRANSIT AUTH</div>
+                    <div>№ M-2600</div>
+                </div>
+                <div class="ticket-body">
+                    <h3>MIDNIGHT METROVERSE</h3>
+                    <p style="font-family:var(--font-mono); font-size:0.75rem; color:var(--neon-purple); margin-top:5px;">
+                        DESTINATION: UNKNOWN // UNFINISHED CONVERSATIONS
+                    </p>
+                </div>
+                <div class="ticket-stub">
+                    <div style="font-family:var(--font-mono); font-size:0.7rem; color:rgba(255,255,255,0.3);">
+                        SEAT: 04 // ONE-WAY ONLY
+                    </div>
+                    <button class="board-btn">BOARD CAR</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="act2-metro-universe" class="hidden">
+            
+            <aside class="metro-map-sidebar">
+                <div class="map-title-block">
+                    <h2>LINE M26</h2>
+                    <p>SYSTEM MAP</p>
+                </div>
+                <div class="map-track-vector">
+                    <div class="map-track-line"></div>
+                    
+                    <div class="station-node-item active" data-target-car="car1">
+                        <div class="station-bullet"></div>
+                        <div class="station-meta-info">
+                            <span class="station-id">CAR_01</span>
+                            <span class="station-name">The Chaos Car</span>
+                        </div>
+                    </div>
+
+                    <div class="station-node-item" data-target-car="car2">
+                        <div class="station-bullet"></div>
+                        <div class="station-meta-info">
+                            <span class="station-id">CAR_02</span>
+                            <span class="station-name">Rain Window</span>
+                        </div>
+                    </div>
+
+                    <div class="station-node-item" data-target-car="car3">
+                        <div class="station-bullet"></div>
+                        <div class="station-meta-info">
+                            <span class="station-id">CAR_03</span>
+                            <span class="station-name">Alternate Reality</span>
+                        </div>
+                    </div>
+
+                    <div class="station-node-item" data-target-car="car4">
+                        <div class="station-bullet"></div>
+                        <div class="station-meta-info">
+                            <span class="station-id">CAR_04</span>
+                            <span class="station-name">Unsent Messages</span>
+                        </div>
+                    </div>
+
+                    <div class="station-node-item" data-target-car="car5">
+                        <div class="station-bullet"></div>
+                        <div class="station-meta-info">
+                            <span class="station-id">CAR_05</span>
+                            <span class="station-name">Photo Tunnel</span>
+                        </div>
+                    </div>
+
+                    <div class="station-node-item" data-target-car="car6">
+                        <div class="station-bullet"></div>
+                        <div class="station-meta-info">
+                            <span class="station-id">CAR_06</span>
+                            <span class="station-name">The Arcade Room</span>
+                        </div>
+                    </div>
+
+                    <div class="station-node-item" data-target-car="car7">
+                        <div class="station-bullet"></div>
+                        <div class="station-meta-info">
+                            <span class="station-id">CAR_07</span>
+                            <span class="station-name">The Abandoned Car</span>
+                        </div>
+                    </div>
+
+                </div>
+            </aside>
+
+            <main class="compartment-viewport-stage">
+
+                <div id="stage-car1" class="compartment-panel-canvas active-stage">
+                    <h1 style="color:var(--neon-pink); margin-bottom:10px;">THE CHAOS CAR</h1>
+                    <p style="margin-bottom:30px; color:rgba(255,255,255,0.6); text-align: center;">Click compilation modules to unlock absolute inner chaos.</p>
+                    <div class="chaos-grid-container">
+                        <div class="chaos-card-item" onclick="triggerChaosAction('menace')">
+                            <h3>Inside Joke Log #41</h3>
+                            <p>"Itachi 🌕🌕"</p>
+                            <span class="menace-badge">Professional Menace</span>
+                        </div>
+                        <div class="chaos-card-item" onclick="triggerChaosAction('brainrot')">
+                            <h3>Kya likhu?</h3>
+                            <p>IDK </p>
+                            <span class="menace-badge" style="background:var(--neon-cyan)">3AM Energy</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="stage-car2" class="compartment-panel-canvas">
+                    <h1 style="color:var(--neon-cyan); margin-bottom:10px;">RAIN WINDOW VIEWPORT</h1>
+                    <p style="margin-bottom:30px; color:rgba(255,255,255,0.6); text-align: center;">The condensation is thick. Drag your mouse or finger across the glass pane to see clearly.</p>
+                    <div class="window-frame-container">
+                        <div class="window-blur-background"></div>
+                        
+                        <div class="window-hidden-photo"></div>
+                        
+                        <div class="window-condensation-overlay"></div>
+                        <canvas id="condensation-scratch-canvas" class="window-glass-canvas"></canvas>
+                        <div class="window-instruction-label">Used this photo a lot but i don't have any other photos</div>
+                    </div>
+                </div>
+
+                <div id="stage-car3" class="compartment-panel-canvas">
+                    <h1 style="color:var(--neon-purple); margin-bottom:10px; text-align: center;">THE ALTERNATE REALITY MACHINE</h1>
+                    <p style="margin-bottom:30px; color:rgba(255,255,255,0.6); text-align: center;">What if we weren't online on that exact same moment</p>
+                    <div class="au-universe-scroller">
+                        <div class="au-node-card" onclick="loadUniverseTimeline('enemies')">
+                            <span class="au-tag">Timeline Alpha</span>
+                            <h3>Stangers to Best Friends AU</h3>
+                            <p style="color:rgba(255,255,255,0.5); margin-top:10px; font-size:0.9rem;">Plot twist: We won't be standing here if u didn't have sended that friend req.....</p>
+                        </div>
+                        <div class="au-node-card" onclick="loadUniverseTimeline('arcade')">
+                            <span class="au-tag">Spotify Vibe Matched</span>
+                            <h3>The more we talk the more we got to know abt each other</h3>
+                            <p style="color:rgba(255,255,255,0.5); margin-top:10px; font-size:0.9rem;">What if we ran an 80s arcade machine ring in Tokyo? High-score system synchronization active.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="stage-car4" class="compartment-panel-canvas">
+                    <h1 style="color:var(--amber-warn); margin-bottom:10px; text-align: center;">UNSENT MESSAGES TERMINAL</h1>
+                    <p style="margin-bottom:30px; color:rgba(255,255,255,0.6); text-align: center;">Logs pulled from text frames that never left draft status.</p>
+                    <div class="unsent-terminal-terminal">
+                        <div class="unsent-msg-line" id="unsent-line-target"></div>
+                        <button class="board-btn" style="border-color:var(--amber-warn); color:var(--amber-warn);" onclick="cycleUnsentMessages()">CYCLE QUEUE</button>
+                    </div>
+                </div>
+
+                <div id="stage-car5" class="compartment-panel-canvas">
+                    <h1 style="color:var(--chrome-silver); margin-bottom:10px; text-align: center;">PHOTO TUNNEL FRAME</h1>
+                    <p style="margin-bottom:30px; color:rgba(255,255,255,0.6); text-align: center;">What? huh??? I ran out of photo nd eough of chatgpt so NO PICS hehe</p>
+                    <div class="photo-tunnel-container" id="photo-tunnel-canvas-area">
+                        </div>
+                </div>
+
+                <div id="stage-car6" class="compartment-panel-canvas">
+                    <h1 style="color:var(--neon-pink); margin-bottom:10px; text-align: center;">METRO OVERRIDE CONSOLE</h1>
+                    <p style="margin-bottom:30px; color:rgba(255,255,255,0.6); text-align: center;">Sync your reaction times to keep the subway engines stable.</p>
+                    <div class="arcade-cabinet-box">
+                        <div class="arcade-score-board">STABILITY High Score: <span id="game-score-display">0</span></div>
+                        <div class="arcade-screen-zone" id="arcade-playfield">
+                            <div class="arcade-interactive-target" id="arcade-clicker" onclick="handleArcadeClick()"></div>
+                            <span style="font-family:var(--font-mono); font-size:0.75rem; color:rgba(255,255,255,0.3); position:absolute; bottom:10px;">TAP MOVING INTERACTIVE TARGET FAST</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="stage-car7" class="compartment-panel-canvas">
+                    <div class="abandoned-car-layout">
+                        <div class="flickering-signboard">Ig I have wrote enough nd I ran out of words.....</div>
+                        <p style="color:rgba(255,255,255,0.4); line-height:1.8;">The lights are dead. The air is heavy with quiet static. It's time for the Train Black Pink to stop here Happy bday DOBIx</p>
+                        <div class="hidden-seat-trigger" onclick="initiateRealityCollapseSequence()">INSPECT BENCH</div>
+                    </div>
+                </div>
+
+            </main>
+        </section>
+
+        <section id="act3-breakdown-screen">
+            <div class="glitch-announcement-panel">!! SYSTEM MALFUNCTION !!</div>
+            <div style="font-size:1.1rem; color:#fff; text-align:center; max-width:500px; line-height:1.6;" id="collapse-text-injector">
+                CRITICAL WARNING: Passengers Travelling through BlackPink Carriage are experiencing severe reality instability. All systems are heated cuz there is a person who's B'day is today nd she is die hard JENNIE fan nd she says she is a baddie so the train is facing severing heating problems and might stop at any station without warning. Please hold tight and try to stay calm. We apologize for the inconvenience and thank you for riding with us on this unforgettable journey... Also the one who worte the code is blank what to add more so the train would stop here Thank u!.
+            </div>
+        </section>
+
+        <section id="act4-last-stop">
+            <div class="final-platform-pole">
+                <div class="final-lamp-glow"></div>
+            </div>
+            <div class="outro-philosophical-statement">
+                "Some people become places you never truly leave."
+            </div>
+            <div style="font-family:var(--font-mono); font-size:0.75rem; color:rgba(255,255,255,0.2);" id="closing-credits-line">
+                Train Black Pink cleared platform. Connection severed safely.
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // Global Application State Matrix Data Configuration Engine
+        const AppState = {
+            currentCar: 'car1',
+            score: 0,
+            stability: 100,
+            clockInterval: null,
+            unsentIndex: 0,
+            unsentMessages: [
+                "Hitansh still has things Hitansh wanted to tell Shruti, but I guess some words are meant to stay unsent.",
+                "Hitansh never thought a random game would introduce Hitansh to someone he'd care about this much.",
+                "my favorite memories aren't wins or ranks, they're the matches we played together.",
+                "Even if we never queue together again, Hitansh will always be grateful for every match we shared."
+            ]
+        };
+
+        // Initialize Global Elements on Dom Parse
+        document.addEventListener('DOMContentLoaded', () => {
+            runTypewriterIntroduction("Train BlackPink arriving shortly...");
+            initiateRainCoreEngine();
+            setupSubwayNavigationMatrix();
+            setupRainWindowScratchEngine();
+            populatePhotoTunnelElements();
+        });
+
+        // Typewriter Engine Logic Array
+        function runTypewriterIntroduction(targetText) {
+            const container = document.getElementById('terminal-typed-text');
+            let idx = 0;
+            container.innerHTML = '';
+            
+            function frame() {
+                if (idx < targetText.length) {
+                    container.innerHTML += targetText.charAt(idx);
+                    idx++;
+                    setTimeout(frame, 90);
+                } else {
+                    // Flash Boarding sequence interface triggers safely
+                    document.getElementById('master-ticket-trigger').addEventListener('click', () => {
+                        transitionFromAct1ToAct2();
+                    });
+                }
+            }
+            frame();
+        }
+
+        // Global Particle Background Rain Vector Animation Frame Setup
+        function initiateRainCoreEngine() {
+            const canvas = document.getElementById('ambient-rain-canvas');
+            const ctx = canvas.getContext('2d');
+            let w = canvas.width = window.innerWidth;
+            let h = canvas.height = window.innerHeight;
+
+            const maxDrops = 140;
+            const drops = [];
+            for (let i = 0; i < maxDrops; i++) {
+                drops.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    l: Math.random() * 25 + 10,
+                    v: Math.random() * 4 + 4
+                });
+            }
+
+            function loop() {
+                ctx.clearRect(0,0,w,h);
+                ctx.strokeStyle = 'rgba(174,194,224,0.15)';
+                ctx.lineWidth = 1;
+                ctx.lineCap = 'round';
+                
+                for(let i=0; i<maxDrops; i++) {
+                    let d = drops[i];
+                    ctx.beginPath();
+                    ctx.moveTo(d.x, d.y);
+                    ctx.lineTo(d.x + (d.v * 0.1), d.y + d.l);
+                    ctx.stroke();
+                    
+                    d.y += d.v;
+                    if(d.y > h) {
+                        d.y = -d.l;
+                        d.x = Math.random() * w;
+                    }
+                }
+                requestAnimationFrame(loop);
+            }
+            loop();
+
+            window.addEventListener('resize', () => {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            });
+        }
+
+        // Handle State Transitions between Boarding Gate and Core Subway Interior Loop
+        function transitionFromAct1ToAct2() {
+            const a1 = document.getElementById('act1-boarding-gate');
+            const a2 = document.getElementById('act2-metro-universe');
+            
+            a1.style.opacity = '0';
+            setTimeout(() => {
+                a1.classList.add('hidden');
+                a2.classList.remove('hidden');
+                document.getElementById('hud-compartment-id').innerText = "CAR_01_CHAOS";
+                runSystemClockTickerEngine();
+            }, 2000);
+        }
+
+        // Dynamic State System Track Controller Configuration Setup
+        function setupSubwayNavigationMatrix() {
+            const nodes = document.querySelectorAll('.station-node-item');
+            nodes.forEach(node => {
+                node.addEventListener('click', () => {
+                    const targetCar = node.getAttribute('data-target-car');
+                    switchCompartmentPanel(targetCar);
+                    
+                    nodes.forEach(n => n.classList.remove('active'));
+                    node.classList.add('active');
+                });
+            });
+        }
+
+        function switchCompartmentPanel(carId) {
+            // Deactivate existing visible viewport containers cleanly
+            const panels = document.querySelectorAll('.compartment-panel-canvas');
+            panels.forEach(p => p.classList.remove('active-stage'));
+
+            const activePanel = document.getElementById(`stage-${carId}`);
+            if(activePanel) {
+                activePanel.classList.add('active-stage');
+                AppState.currentCar = carId;
+                document.getElementById('hud-compartment-id').innerText = `${carId.toUpperCase()}_STAGE_NODE`;
+            }
+        }
+
+        // Compartment Action System Triggers for Interactions 
+        function triggerChaosAction(type) {
+            if(type === 'menace') {
+                alert("Achievement Authenticated: Master of Reality Disruption!");
+            } else {
+                alert("Injecting raw chaotic telemetry packets into memory buffer...");
+            }
+        }
+
+        // Compartment 2: HTML5 Canvas Condensation Fog-Eraser Core Engine (UPDATED FOR MOBILE)
+        function setupRainWindowScratchEngine() {
+            const canvas = document.getElementById('condensation-scratch-canvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = 650;
+            canvas.height = 400;
+
+            // Fill with a uniform foggy condensation coating look
+            ctx.fillStyle = 'rgba(210, 225, 240, 0.94)';
+            ctx.fillRect(0,0,650,400);
+
+            // Set up masking parameters to clear lines out smoothly
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = 32;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            let drawing = false;
+
+            const startDrawing = (e) => {
+                drawing = true;
+                scratch(e);
+            };
+            const stopDrawing = () => drawing = false;
+            
+            const scratch = (e) => {
+                if(!drawing) return;
+                e.preventDefault(); // Prevents page scrolling on touch devices while wiping window
+                
+                const rect = canvas.getBoundingClientRect();
+                
+                // Calculates scaling multiplier for responsiveness
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                
+                let clientX = e.clientX;
+                let clientY = e.clientY;
+                
+                // Touch fallback check
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                }
+
+                // Normalizing CSS display scale to internal Canvas geometry 
+                const x = (clientX - rect.left) * scaleX;
+                const y = (clientY - rect.top) * scaleY;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2); 
+                ctx.fill();
+            };
+
+            // Mouse Events
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mousemove', scratch);
+            canvas.addEventListener('mouseleave', stopDrawing);
+
+            // Touch Events mapping for mobile viewport scratching
+            canvas.addEventListener('touchstart', startDrawing, { passive: false });
+            canvas.addEventListener('touchend', stopDrawing);
+            canvas.addEventListener('touchmove', scratch, { passive: false });
+        }
+
+        // Compartment 4: Unsent Transmit Message Array Cycles
+        function cycleUnsentMessages() {
+            const target = document.getElementById('unsent-line-target');
+            target.innerHTML = '';
+            const msg = AppState.unsentMessages[AppState.unsentIndex];
+            
+            let charIdx = 0;
+            function type() {
+                if(charIdx < msg.length) {
+                    target.innerHTML += msg.charAt(charIdx);
+                    charIdx++;
+                    setTimeout(type, 50);
+                }
+            }
+            type();
+
+            AppState.unsentIndex = (AppState.unsentIndex + 1) % AppState.unsentMessages.length;
+        }
+
+        // Compartment 5: Mathematical Infinite 3D Photo Pseudo-Tunnel Generator Logic
+        function populatePhotoTunnelElements() {
+            const tunnelArea = document.getElementById('photo-tunnel-canvas-area');
+            if(!tunnelArea) return;
+
+            // Emulated dataset mapping locations down simulated spatial layouts
+            const mockPhotos = [
+                { caption: "Day 1: System Baseline Setup", x: 10, y: 15, scale: 0.8 },
+                { caption: "Day 42: The Mid-Year Meltdown Log", x: 45, y: 30, scale: 0.95 },
+                { caption: "Day 119: Infinite Inside Joke Arrays", x: 25, y: 60, scale: 1.1 }
+            ];
+
+            mockPhotos.forEach((p, idx) => {
+                const frame = document.createElement('div');
+                frame.className = 'floating-memory-frame';
+                // Placeholder imagery vector mapping
+                frame.innerHTML = `
+                    <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&width=400" alt="Memory">
+                    <div>${p.caption}</div>
+                `;
+                frame.style.left = `${p.x}%`;
+                frame.style.top = `${p.y}%`;
+                frame.style.transform = `scale(${p.scale}) rotate(${idx * 4 - 4}deg)`;
+                frame.style.zIndex = idx + 10;
+                
+                tunnelArea.appendChild(frame);
+            });
+        }
+
+        // Compartment 6: Stability Engine Mini Game React Logic Engine Array (UPDATED FOR RESPONSIVE)
+        function handleArcadeClick() {
+            AppState.score += 10;
+            document.getElementById('game-score-display').innerText = AppState.score;
+            
+            const clicker = document.getElementById('arcade-clicker');
+            const playfield = document.getElementById('arcade-playfield');
+            
+            // Generate bounds dynamically based on current container size
+            const maxW = playfield.clientWidth - 60; // Subtract object width
+            const maxH = playfield.clientHeight - 60; // Subtract object height
+            
+            const newX = Math.random() * maxW + 30; // 30 is half the clicker's width to keep it inside bounding box
+            const newY = Math.random() * maxH + 30;
+            
+            clicker.style.left = `${newX}px`;
+            clicker.style.top = `${newY}px`;
+            clicker.style.transform = `translate(-50%, -50%) scale(0.9)`;
+            
+            setTimeout(() => {
+                clicker.style.transform = `translate(-50%, -50%) scale(1)`;
+            }, 100);
+        }
+
+        // Act 3: Complete Reality Matrix Structural Breakdown Engine Sequencer
+        function initiateRealityCollapseSequence() {
+            const act3 = document.getElementById('act3-breakdown-screen');
+            act3.style.display = 'flex';
+            
+            let loopCounter = 0;
+            const hudStability = document.getElementById('hud-stability-meter');
+            
+            const collapseTimer = setInterval(() => {
+                AppState.stability -= 13;
+                if(AppState.stability < 0) AppState.stability = 0;
+                hudStability.innerText = `${AppState.stability}%`;
+                
+                // Randomize text frame artifacts to emulate computational screen tears
+                document.getElementById('collapse-text-injector').style.transform = `translate(${Math.random()*8-4}px, ${Math.random()*8-4}px)`;
+                
+                loopCounter++;
+                if(loopCounter > 12) {
+                    clearInterval(collapseTimer);
+                    triggerFinalOutroActSequence();
+                }
+            }, 350);
+        }
+
+        // Final Act: Execution Framework to Safely Terminate Connection Viewports
+        function triggerFinalOutroActSequence() {
+            document.getElementById('act3-breakdown-screen').style.display = 'none';
+            document.getElementById('act2-metro-universe').style.display = 'none';
+            
+            const finalStop = document.getElementById('act4-last-stop');
+            finalStop.style.display = 'flex';
+            setTimeout(() => {
+                finalStop.style.opacity = '1';
+            }, 100);
+        }
+
+        // Global Structural HUD Clock Update Ticker Loop
+        function runSystemClockTickerEngine() {
+            let hr = 2;
+            let min = 14;
+            const clockEl = document.getElementById('hud-clock-time');
+            
+            AppState.clockInterval = setInterval(() => {
+                min++;
+                if(min >= 60) {
+                    min = 0; hr++;
+                }
+                const hrStr = hr < 10 ? `0${hr}` : hr;
+                const minStr = min < 10 ? `0${min}` : min;
+                clockEl.innerText = `${hrStr}:${minStr} AM`;
+            }, 6000);
+        }
+    </script>
+</body>
+</html>
+
