@@ -811,6 +811,10 @@
 </head>
 <body>
 
+    <audio id="metro-bg-audio" loop preload="auto">
+        <source src="your-audio-file<!-- .mp -->3" type="audio/mpeg">
+    </audio>
+
     <div class="vhs-overlay"></div>
     <canvas id="ambient-rain-canvas" class="rain-canvas-layer"></canvas>
 
@@ -1069,13 +1073,19 @@
                     container.innerHTML += targetText.charAt(idx);
                     idx++;
                     setTimeout(frame, 90);
-                } else {
+              } else {
                     // Flash Boarding sequence interface triggers safely
                     document.getElementById('master-ticket-trigger').addEventListener('click', () => {
+                        // Trigger background audio upon user interaction
+                        const bgAudio = document.getElementById('metro-bg-audio');
+                        if (bgAudio) {
+                            bgAudio.volume = 0.5; // Adjust volume from 0.0 to 1.0
+                            bgAudio.play().catch(err => console.log("Audio matrix block: ", err));
+                        }
+                        
                         transitionFromAct1ToAct2();
                     });
                 }
-            }
             frame();
         }
 
@@ -1317,6 +1327,7 @@
 
         // Act 3: Complete Reality Matrix Structural Breakdown Engine Sequencer
         function initiateRealityCollapseSequence() {
+            document.getElementById('metro-bg-audio').pause();
             const act3 = document.getElementById('act3-breakdown-screen');
             act3.style.display = 'flex';
             
